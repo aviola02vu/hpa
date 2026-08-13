@@ -1,0 +1,351 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Villanova HPA GPA Calculator</title>
+<style>
+  :root{
+    --vu-navy:#002664;
+    --vu-blue:#1f5fa8;
+    --vu-pale:#eaf2fb;
+    --vu-pale2:#f6f9fc;
+    --vu-border:#c8d2df;
+    --vu-text:#1f2937;
+    --vu-muted:#5f6b7a;
+    --vu-danger:#8a1c1c;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#fff;color:var(--vu-text);font-family:Arial,Helvetica,sans-serif;line-height:1.4}
+  .wrap{max-width:1500px;margin:0 auto;padding:24px}
+  .brand{text-align:center;color:var(--vu-navy);font-family:Georgia,"Times New Roman",serif;font-weight:700}
+  .brand .uni{font-size:clamp(24px,3vw,36px);letter-spacing:.02em}
+  .brand .office{font-size:clamp(18px,2.3vw,27px)}
+  .titlebar{margin:12px 0 18px;background:var(--vu-navy);color:#fff;text-align:center;padding:11px 16px;font-family:Georgia,"Times New Roman",serif;font-size:clamp(18px,2vw,24px)}
+  .intro{background:var(--vu-pale);border-left:5px solid var(--vu-navy);padding:14px 16px;margin-bottom:18px}
+  .intro p{margin:4px 0}.intro strong{color:var(--vu-navy)}.small{font-size:13px;color:var(--vu-muted)}
+  .section-title{color:var(--vu-navy);font-size:20px;font-weight:700;margin:24px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--vu-navy)}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 12px}
+  button{border:1px solid var(--vu-navy);background:var(--vu-navy);color:#fff;border-radius:5px;padding:9px 13px;font-weight:700;cursor:pointer}
+  button.secondary{background:#fff;color:var(--vu-navy)}
+  button.danger{background:#fff;color:var(--vu-danger);border-color:#b8c0ca}
+  button:hover{filter:brightness(.97)}
+  button:focus,input:focus,select:focus{outline:3px solid rgba(31,95,168,.22);outline-offset:1px}
+  .table-scroll{overflow-x:auto;border:1px solid var(--vu-border)}
+  table{width:100%;border-collapse:collapse;background:#fff}
+  th,td{border:1px solid var(--vu-border);padding:7px 8px;vertical-align:middle}
+  th{background:var(--vu-navy);color:#fff;text-align:left;font-size:13px;white-space:nowrap}
+  td{font-size:13px;background:#fff}
+  .entry-table td.input-cell{background:var(--vu-pale2)}
+  input,select{width:100%;padding:7px 8px;border:1px solid #aeb9c6;border-radius:3px;background:#fff;color:var(--vu-text);font:inherit}
+  input.school{min-width:125px} input.course{min-width:190px} input.crn{min-width:90px} input.year{min-width:78px} input.credits{min-width:80px}
+  select.level{min-width:165px} select.term{min-width:95px} select.grade{min-width:78px} select.bcpm{min-width:82px}
+  .readonly{text-align:right;background:#f3f4f6!important;color:#374151;font-variant-numeric:tabular-nums;min-width:88px}
+  .remove-cell{text-align:center}
+  .remove-btn{background:#fff;border:1px solid #c5cbd3;color:var(--vu-danger);padding:6px 9px;min-width:36px}
+  .summary-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:12px 0 18px}
+  .card{border:1px solid var(--vu-border);border-top:5px solid var(--vu-navy);padding:14px}
+  .card .label{color:var(--vu-muted);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+  .card .value{color:var(--vu-navy);font-size:32px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+  .card .sub{color:var(--vu-muted);font-size:13px}
+  .results-table th.group{background:#0d427f;text-align:center}
+  .results-table td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .results-table td:first-child{font-weight:700}
+  .empty{color:var(--vu-muted);font-style:italic;text-align:center}
+  .grade-scale{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12px;color:var(--vu-muted)}
+  .grade-scale span{white-space:nowrap}
+  .footer-note{margin-top:22px;padding:12px 14px;border:1px solid var(--vu-border);background:#fafafa;color:var(--vu-muted);font-size:13px}
+  @media(max-width:850px){.wrap{padding:14px}.summary-cards{grid-template-columns:1fr}}
+  @media print{
+    .controls,.remove-col,.remove-cell{display:none!important}
+    .wrap{max-width:none;padding:0}
+    .table-scroll{overflow:visible;border:none}
+    .titlebar,.intro,th,.card{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    input,select{border:none;padding:0;-webkit-appearance:none;appearance:none}
+  }
+</style>
+</head><body><div class="wrap">
+<div class="brand">
+<div class="uni">VILLANOVA UNIVERSITY</div>
+<div class="office">HEALTH PROFESSIONS ADVISING</div>
+</div>
+<div class="titlebar">GPA Calculator</div>
+<div class="intro">
+<p><strong>Enter each college-level course once.</strong> The calculator will automatically calculate your overall GPA, BCPM GPA, non-BCPM GPA, academic-year summary, and semester-by-semester GPA.</p>
+<p>For each course, enter the academic level, semester, year, school, course name, CRN (optional), credit hours, grade, and whether the course should be included in your BCPM GPA.</p>
+<p class="small"><strong>BCPM</strong> = Biology, Chemistry, Physics, and Mathematics. Classify courses according to the requirements of the application service(s) you plan to use.</p>
+</div>
+<div class="section-title">Coursework</div>
+<div class="controls"><button type="button" id="addRowBtn">+ Add Course</button> <button type="button" class="secondary" id="printBtn">Print / Save as PDF</button> <button type="button" class="danger" id="resetBtn">Clear All</button></div>
+<div class="table-scroll">
+<table class="entry-table">
+<thead>
+<tr>
+<th>Academic Level</th>
+<th>Semester</th>
+<th>Year</th>
+<th>School</th>
+<th>Class Name</th>
+<th>CRN<br><span style="font-weight: 400;">(optional)</span></th>
+<th>Credit Hours</th>
+<th>Grade</th>
+<th>BCPM?</th>
+<th>Quality Points</th>
+<th>Grade Points</th>
+<th class="remove-col">Remove</th>
+</tr>
+</thead>
+<tbody id="courseBody"></tbody>
+</table>
+</div>
+<div class="grade-scale"><span>A / A+ = 4.00</span><span>A− = 3.67</span><span>B+ = 3.33</span><span>B = 3.00</span><span>B− = 2.67</span> <span>C+ = 2.33</span><span>C = 2.00</span><span>C− = 1.67</span><span>D+ = 1.33</span><span>D = 1.00</span><span>D− = 0.67</span><span>F = 0.00</span></div>
+<div class="section-title">Current Totals</div>
+<div class="summary-cards">
+<div class="card">
+<div class="label">Overall GPA</div>
+<div class="value" id="overallGpa">—</div>
+<div class="sub"><span id="overallCredits">0</span> GPA credits</div>
+</div>
+<div class="card">
+<div class="label">BCPM GPA</div>
+<div class="value" id="bcpmGpa">—</div>
+<div class="sub"><span id="bcpmCredits">0</span> BCPM credits</div>
+</div>
+<div class="card">
+<div class="label">Non-BCPM GPA</div>
+<div class="value" id="nonBcpmGpa">—</div>
+<div class="sub"><span id="nonBcpmCredits">0</span> non-BCPM credits</div>
+</div>
+</div>
+<div class="section-title">Academic Profile Summary</div>
+<div class="table-scroll">
+<table class="results-table">
+<thead>
+<tr>
+<th rowspan="2">Academic Period</th>
+<th colspan="2" class="group">BCPM</th>
+<th colspan="2" class="group">Overall</th>
+</tr>
+<tr>
+<th>GPA</th>
+<th># Credits</th>
+<th>GPA</th>
+<th># Credits</th>
+</tr>
+</thead>
+<tbody id="profileSummary"></tbody>
+</table>
+</div>
+<div class="section-title">Semester-by-Semester Summary</div>
+<div class="table-scroll">
+<table class="results-table">
+<thead>
+<tr>
+<th>Semester</th>
+<th>Overall GPA</th>
+<th>Overall Credits</th>
+<th>BCPM GPA</th>
+<th>BCPM Credits</th>
+</tr>
+</thead>
+<tbody id="semesterSummary"></tbody>
+</table>
+</div>
+<div class="footer-note"><strong>Important:</strong> This calculator is intended as a planning tool. Application services may classify courses or calculate GPA differently. Always follow the current instructions for the application service(s) to which you are applying.</div>
+</div>
+<p><script>
+(function(){
+  "use strict";
+
+  const GRADE_POINTS = {
+    "A+":4.00,"A":4.00,"A-":3.67,"B+":3.33,"B":3.00,"B-":2.67,
+    "C+":2.33,"C":2.00,"C-":1.67,"D+":1.33,"D":1.00,"D-":0.67,"F":0.00
+  };
+
+  const LEVELS = ["Freshman year","Sophomore year","Junior year","Senior year","Post-bac Undergraduate","Post-bac Graduate"];
+  const TERMS = ["Winter","Spring","Summer","Fall"];
+  const PROFILE_ROWS = [
+    {label:"Freshman year",levels:["Freshman year"]},
+    {label:"Sophomore year",levels:["Sophomore year"]},
+    {label:"Junior year",levels:["Junior year"]},
+    {label:"Senior year",levels:["Senior year"]},
+    {label:"Cumulative Undergraduate to date",levels:["Freshman year","Sophomore year","Junior year","Senior year"]},
+    {label:"Post-bac Undergraduate courses if applicable",levels:["Post-bac Undergraduate"]},
+    {label:"Post-bac Graduate courses if applicable",levels:["Post-bac Graduate"]}
+  ];
+  const TERM_ORDER = {"Winter":1,"Spring":2,"Summer":3,"Fall":4};
+  const body = document.getElementById("courseBody");
+
+  function option(value,label){
+    const o=document.createElement("option");
+    o.value=value;
+    o.textContent=label ?? value;
+    return o;
+  }
+
+  function selectField(className,placeholder,values){
+    const s=document.createElement("select");
+    s.className=className;
+    s.appendChild(option("",placeholder));
+    values.forEach(v=>s.appendChild(option(v,v)));
+    return s;
+  }
+
+  function addRow(data={}){
+    const tr=document.createElement("tr");
+    let td, el;
+
+    td=document.createElement("td"); td.className="input-cell";
+    el=selectField("level","Select…",LEVELS); el.value=data.level||""; td.appendChild(el); tr.appendChild(td);
+
+    td=document.createElement("td"); td.className="input-cell";
+    el=selectField("term","Select…",TERMS); el.value=data.term||""; td.appendChild(el); tr.appendChild(td);
+
+    td=document.createElement("td"); td.className="input-cell";
+    el=document.createElement("input"); el.className="year"; el.type="number"; el.min="1900"; el.max="2100"; el.step="1"; el.placeholder="2026"; el.value=data.year||""; td.appendChild(el); tr.appendChild(td);
+
+    td=document.createElement("td"); td.className="input-cell";
+    el=document.createElement("input"); el.className="school"; el.type="text"; el.placeholder="School"; el.value=data.school||""; td.appendChild(el); tr.appendChild(td);
+
+    td=document.createElement("td"); td.className="input-cell";
+    el=document.createElement("input"); el.className="course"; el.type="text"; el.placeholder="Course name"; el.value=data.course||""; td.appendChild(el); tr.appendChild(td);
+
+    td=document.createElement("td"); td.className="input-cell";
+    el=document.createElement("input"); el.className="crn"; el.type="text"; el.placeholder="Optional"; el.value=data.crn||""; td.appendChild(el); tr.appendChild(td);
+
+    td=document.createElement("td"); td.className="input-cell";
+    el=document.createElement("input"); el.className="credits"; el.type="number"; el.min="0"; el.step="0.01"; el.placeholder="0"; el.value=data.credits??""; td.appendChild(el); tr.appendChild(td);
+
+    td=document.createElement("td"); td.className="input-cell";
+    el=selectField("grade","Select…",Object.keys(GRADE_POINTS)); el.value=data.grade||""; td.appendChild(el); tr.appendChild(td);
+
+    td=document.createElement("td"); td.className="input-cell";
+    el=selectField("bcpm","Select…",["Yes","No"]); el.value=data.bcpm||""; td.appendChild(el); tr.appendChild(td);
+
+    td=document.createElement("td"); td.className="readonly quality"; td.textContent=""; tr.appendChild(td);
+    td=document.createElement("td"); td.className="readonly gradepoints"; td.textContent=""; tr.appendChild(td);
+
+    td=document.createElement("td"); td.className="remove-cell";
+    const remove=document.createElement("button");
+    remove.type="button"; remove.className="remove-btn"; remove.textContent="×"; remove.title="Remove this course"; remove.setAttribute("aria-label","Remove this course");
+    remove.addEventListener("click",()=>{tr.remove(); if(body.children.length===0) addRow(); recalc();});
+    td.appendChild(remove); tr.appendChild(td);
+
+    tr.querySelectorAll("input,select").forEach(x=>{x.addEventListener("input",recalc); x.addEventListener("change",recalc);});
+    body.appendChild(tr);
+    recalc();
+  }
+
+  function getCourses(){
+    return Array.from(body.querySelectorAll("tr")).map(tr=>{
+      const s=tr.querySelectorAll("select");
+      const i=tr.querySelectorAll("input");
+
+      const level=s[0].value, term=s[1].value, grade=s[2].value, bcpm=s[3].value;
+      const year=i[0].value.trim(), school=i[1].value.trim(), course=i[2].value.trim(), crn=i[3].value.trim();
+      const creditsRaw=i[4].value;
+      const credits=creditsRaw==="" ? NaN : Number(creditsRaw);
+      const qualityPoints=Object.prototype.hasOwnProperty.call(GRADE_POINTS,grade) ? GRADE_POINTS[grade] : NaN;
+      const validForGpa=Number.isFinite(credits)&&credits>0&&Number.isFinite(qualityPoints);
+      const gradePoints=validForGpa ? credits*qualityPoints : NaN;
+
+      tr.querySelector(".quality").textContent=Number.isFinite(qualityPoints)?qualityPoints.toFixed(2):"";
+      tr.querySelector(".gradepoints").textContent=Number.isFinite(gradePoints)?gradePoints.toFixed(2):"";
+
+      return {level,term,year,school,course,crn,credits,grade,bcpm,qualityPoints,gradePoints,validForGpa};
+    });
+  }
+
+  function stats(courses){
+    const valid=courses.filter(c=>c.validForGpa);
+    const credits=valid.reduce((sum,c)=>sum+c.credits,0);
+    const points=valid.reduce((sum,c)=>sum+c.gradePoints,0);
+    return {credits,points,gpa:credits>0?points/credits:null};
+  }
+
+  const fmtGpa=v=>v===null?"—":v.toFixed(2);
+  function fmtCredits(v){
+    if(!v) return "0";
+    return Number.isInteger(v)?String(v):v.toFixed(2).replace(/0+$/,"").replace(/\.$/,"");
+  }
+
+  function renderCards(courses){
+    const overall=stats(courses);
+    const bcpm=stats(courses.filter(c=>c.bcpm==="Yes"));
+    const non=stats(courses.filter(c=>c.bcpm==="No"));
+    document.getElementById("overallGpa").textContent=fmtGpa(overall.gpa);
+    document.getElementById("overallCredits").textContent=fmtCredits(overall.credits);
+    document.getElementById("bcpmGpa").textContent=fmtGpa(bcpm.gpa);
+    document.getElementById("bcpmCredits").textContent=fmtCredits(bcpm.credits);
+    document.getElementById("nonBcpmGpa").textContent=fmtGpa(non.gpa);
+    document.getElementById("nonBcpmCredits").textContent=fmtCredits(non.credits);
+  }
+
+  function renderProfile(courses){
+    const tbody=document.getElementById("profileSummary");
+    tbody.innerHTML="";
+    PROFILE_ROWS.forEach(row=>{
+      const selected=courses.filter(c=>row.levels.includes(c.level));
+      const overall=stats(selected);
+      const bcpm=stats(selected.filter(c=>c.bcpm==="Yes"));
+      const tr=document.createElement("tr");
+      tr.innerHTML=`<td>${row.label}</td><td class="num">${fmtGpa(bcpm.gpa)}</td><td class="num">${fmtCredits(bcpm.credits)}</td><td class="num">${fmtGpa(overall.gpa)}</td><td class="num">${fmtCredits(overall.credits)}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderSemester(courses){
+    const tbody=document.getElementById("semesterSummary");
+    tbody.innerHTML="";
+    const usable=courses.filter(c=>c.validForGpa&&c.term&&c.year);
+    const groups=new Map();
+
+    usable.forEach(c=>{
+      const key=`${c.year}|${c.term}`;
+      if(!groups.has(key)) groups.set(key,[]);
+      groups.get(key).push(c);
+    });
+
+    const keys=Array.from(groups.keys()).sort((a,b)=>{
+      const [ya,ta]=a.split("|"), [yb,tb]=b.split("|");
+      if(Number(ya)!==Number(yb)) return Number(ya)-Number(yb);
+      return (TERM_ORDER[ta]||99)-(TERM_ORDER[tb]||99);
+    });
+
+    if(keys.length===0){
+      const tr=document.createElement("tr");
+      tr.innerHTML='<td colspan="5" class="empty">Semester results will appear here after you enter a semester, year, credits, and grade.</td>';
+      tbody.appendChild(tr);
+      return;
+    }
+
+    keys.forEach(key=>{
+      const [year,term]=key.split("|");
+      const set=groups.get(key);
+      const overall=stats(set);
+      const bcpm=stats(set.filter(c=>c.bcpm==="Yes"));
+      const tr=document.createElement("tr");
+      tr.innerHTML=`<td>${term} ${year}</td><td class="num">${fmtGpa(overall.gpa)}</td><td class="num">${fmtCredits(overall.credits)}</td><td class="num">${fmtGpa(bcpm.gpa)}</td><td class="num">${fmtCredits(bcpm.credits)}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function recalc(){
+    const courses=getCourses();
+    renderCards(courses);
+    renderProfile(courses);
+    renderSemester(courses);
+  }
+
+  document.getElementById("addRowBtn").addEventListener("click",()=>addRow());
+  document.getElementById("printBtn").addEventListener("click",()=>window.print());
+  document.getElementById("resetBtn").addEventListener("click",()=>{
+    if(!confirm("Clear all entered coursework and start over?")) return;
+    body.innerHTML="";
+    for(let n=0;n<6;n++) addRow();
+    recalc();
+  });
+
+  for(let n=0;n<6;n++) addRow();
+  recalc();
+})();
+</script></p></body></html>
